@@ -127,7 +127,7 @@ def main():
         "check_file_folder":'/Users/liuxb/2021_au/al_rao/lab/lab1/for_checking',
         "check_test_file":  'classification_simple_test.csv',
         "test_file":        'test_set.csv',
-        "save_path":        '/Users/liuxb/2021_au/al_rao/lab/lab1/result/checking_classification.csv',
+        "save_path":        '/Users/liuxb/2021_au/al_rao/lab/lab1/for_checking/for_check_classification.csv',
         "check_mode":       1
     }
 

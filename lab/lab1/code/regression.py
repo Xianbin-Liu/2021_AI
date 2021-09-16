@@ -69,9 +69,9 @@ def main():
         "check_file_folder":'/Users/liuxb/2021_au/al_rao/lab/lab1/for_checking',
         "check_test_file":  'regression_simple_test.csv',
         "test_file":        'test_set.csv',
-        "save_path":        '/Users/liuxb/2021_au/al_rao/lab/lab1/result/18308133_liuxianbin_regression.csv',
-        "check_mode":       0,
-        "output_validation":1
+        "save_path":        '/Users/liuxb/2021_au/al_rao/lab/lab1/for_checking/for_check_regression.csv',
+        "check_mode":       1,
+        "output_validation":0
     }
 
 
@@ -115,17 +115,18 @@ def main():
             ac[(k, losstype)] = thisac
 
     # save best_validation
-    y_pred = model.predict(val_set, best_config[0], best_config[1])
-    with open(file="/Users/liuxb/2021_au/al_rao/lab/lab1/result/validation_predict.csv", mode='wb') as f:
-        df = pandas.DataFrame()
-        df['textid'] = list(range(1, len(y_pred)+1))
-        i = 0
-        for name in label_map:
-            df[name] = y_pred[:,i]
-            i += 1
+    if configfile['output_validation']:
+        y_pred = model.predict(val_set, best_config[0], best_config[1])
+        with open(file="/Users/liuxb/2021_au/al_rao/lab/lab1/result/validation_predict.csv", mode='wb') as f:
+            df = pandas.DataFrame()
+            df['textid'] = list(range(1, len(y_pred)+1))
+            i = 0
+            for name in label_map:
+                df[name] = y_pred[:,i]
+                i += 1
 
-        df.to_csv(f, index=False)
-        print('already save the best validation result')
+            df.to_csv(f, index=False)
+            print('already save the best validation result')
 
     # draw
     #draw(ac)
