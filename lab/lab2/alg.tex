@@ -1,0 +1,185 @@
+\documentclass[11pt]{article}
+\usepackage{algorithm} %format of the algorithm 
+\usepackage{algorithmic} %format of the algorithm 
+\usepackage{multirow} %multirow for format of table 
+\usepackage{amsmath} 
+\usepackage{xcolor}
+\usepackage{CJKutf8}
+\usepackage{floatflt}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} 
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\title{实验二 决策树的实现}
+\author{18308133 刘显彬}
+\date{\today}
+\begin{document}
+\begin{CJK}{UTF8}{gbsn}
+\maketitle
+\section{实验原理}
+\subsection{决策树}
+\subsection{ID3模型}
+\subsection{C4.5模型}
+\subsection{Cart模型}
+\subsection{决策树的形成过程}
+\section{伪代码}
+\textbf{算法1:计算给定数据集的熵值；}
+\begin{algorithm}
+\caption{cal-HD(l)}
+\label{alg1}
+\begin{algorithmic}
+\REQUIRE $\l: label\ of \ dataset(D)$
+\ENSURE $H(D)$
+\STATE $labels \gets label \in l$
+\STATE $freq \gets frequency\ of\ label$
+\STATE $n \gets num\ of \ label$
+\STATE HD = 0
+\FOR{$i \gets 0\ to\ n$}{\label{for1}
+	\STATE HD += $freq[i]*log(freq[i])$;}
+\ENDFOR
+\STATE reurn HD
+
+\end{algorithmic}
+	
+\end{algorithm}
+
+\textbf{算法2:计算信息增益}
+\begin{algorithm}
+
+\caption{Gain(d, attr, HD)}\label{alg2}
+\begin{algorithmic}
+\REQUIRE $d$: dataset, $attr$: split attr, $HD$: entropy of $d$
+\ENSURE $gain$
+\STATE // 分裂数据
+\STATE $values \gets value \in d[attr]$;
+
+
+\STATE $N \gets len(d)$;
+\STATE set $spData = $ empty dict;
+\FOR {$v$ such that $v \in values$}{\label{splitData}
+	\STATE $spData[v] = subD, where subD[attr]=='v' and subD \in d$
+	 
+}
+\ENDFOR
+\STATE $H(D)_A$=0
+
+\FOR{$sub$ such that $sub \in spData$}{\label{get HD_A}
+	\STATE // 计算各个子数据集的熵，并求和
+	\STATE $H(D)_A$ += $\frac{len(sub)}{N}*cal\_HD(sub)$；
+		}
+\ENDFOR
+\STATE return $HD-H(D)_A$
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{GainRatio(d, attr, HD)}\label{alg3}
+\begin{algorithmic}
+\REQUIRE $d$: dataset, $attr$: split attr, $HD$: entropy of $d$
+\ENSURE $gainRatio$
+\STATE // 像前一个算法一样分裂数据集
+\STATE $spData \gets $ split $d$ with val $\in attr$
+\STATE // 计算$SplitInfo$
+\STATE $splitInfo \gets 0$
+\STATE $N \gets len(d)$;
+\FOR{$sub$ such that $sub \in spData$}
+\STATE $SplitInfo$ += $\frac{len(sub)}{N}*log(\frac{len(sub)}{N})$
+\ENDFOR
+\STATE return $\frac{Gain(d,attr,HD)}{SplitInfo}$
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{Gini(d)}\label{alg4}
+\begin{algorithmic}
+\REQUIRE $d$: dataset
+\ENSURE $gini$
+
+\STATE // 分成不同的类
+\STATE $spData \gets $ split $d$ with different label
+\STATE $N \gets len(d)$
+\STATE 计算这些类的比重
+\STATE $freqs \gets \frac{len(dset)}{N}\ \forall dset \in spData$ \newline
+
+\STATE return $1-\sum_{freq\in freqs}{freq^2}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Gini(d, attr)}\label{alg5}
+\begin{algorithmic}
+\REQUIRE $d$: dataset, $attr$: split attr
+\ENSURE $gini$
+
+\STATE // 像前一个算法一样分裂数据集
+\STATE $spData \gets $ split $d$ with val $\in attr$
+\STATE $N \gets len(d)$
+\STATE $freqs \gets \frac{len(dset)}{N}\ \forall dset \in spData$ \newline
+\STATE $gini \gets 0$
+\FOR{$i \gets 0\ to\ len(freqs)$}{\label{get HD_A}
+	\STATE $gini$ += $freqs[i]*Gini(spData[i])$；
+		}
+\ENDFOR
+\STATE return $gini$
+\end{algorithmic}
+\end{algorithm}
+
+%% decision 
+\begin{algorithm}
+\caption{buildTree(root, d, alg)}\label{alg6}
+\begin{algorithmic}
+\REQUIRE $d$: dataset, $root$:决策树根, $alg$:计算信息熵的算法
+\IF{$d.attr == null$ or only one label in d.labels}
+\STATE 这是一片叶子
+\STATE root['attr']='leaf', root['val']=vote\_max(d.labels)
+\STATE return root
+\ELSE
+\STATE $best \gets -inf$;
+\STATE $bestattr \gets ''$;
+\STATE //根据给定的算法找出最优的属性
+\FORALL{$attr \in d.attr$}{
+	\STATE $best \gets alg(d, attr)$;
+	\STATE $bestattr \gets argmax(best,attr)$;
+
+}
+\ENDFOR \newline
+\STATE //然后对最优属性进行分裂，对子节点进行迭代
+\STATE $root['attr']\gets bestattr$
+\STATE $spData \gets$ d splitted by bestattr;
+\FOR{$sub \in spData$}{
+	\STATE $root['val']\gets buildTree(root['val'], sub, alg)$;
+}
+\ENDFOR 
+\ENDIF
+\ENSURE $root$
+
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\begin{algorithmic}
+\caption{predict(root, data)}
+\REQUIRE root:  决策树树根, data: 待预测的数据
+\ENSURE predVal: 预测值
+\STATE $cur \gets root$
+\STATE //当前不是叶子时，进行搜索
+\STATE $attr \gets cur['attr']$
+\WHILE{$attr$ != $'leaf'$}
+\STATE //进入data[attr]对应的一支分枝
+\STATE	$cur \gets cur['val'][data[attr]]$
+\STATE  $attr \gets cur['attr']$
+\ENDWHILE
+\STATE //返回叶子的预测label
+\STATE return cur['val']
+\end{algorithmic}
+\end{algorithm}
+
+\section{关键代码分析}
+\section{实验结果和分析}
+\section{思考题}
+\section{遇到的问题和解决}
+\section{Reference}
+
+
+\end{CJK}
+\end{document}
