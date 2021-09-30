@@ -1,8 +1,4 @@
-from datetime import date
-from os import confstr
-from typing_extensions import TypeGuard
 import numpy as np
-from numpy.typing import _128Bit
 import pandas as pd
 from typing import List, Mapping, Union
 import operator
@@ -10,7 +6,6 @@ import json
 import matplotlib.pyplot as plt 
 
 from pandas.core.frame import DataFrame
-from pandas.core.indexing import _LocationIndexer, convert_from_missing_indexer_tuple
 
 import sys
 sys.path.append('../')
@@ -21,14 +16,14 @@ def GetConfigure():
         'loaden' : 0,           # load the dict key for decision tree, so that it would not build the tree again 
         'loadDictFile' : 'param/decision_root_dict.json',
         'saveDictFile' : 'param/decision_root_dict.json',    
-        'validFile' : '',   # if not specify this file, use splitted default dataset for valset
-        'trainFile' : '',       # the same as above
+        'validFile' : 'testFile/car_test_without_label_1.csv',   # if not specify this file, use splitted default dataset for valset
+        'trainFile' : 'testFile/car_train_with_label.csv',       # the same as above
         'saveResultPath':'result/18308133_liuxianbin_decisionTree_prediction',
         'validation_rate': 0.15,     # the rate of dataset spliting for validation
         'reconstruct': 0,       # whether to reconstruct the train/val dataset with last time, only in train mode
-        'testMode':0,               # turn on testMode: will no longer save any param with model, last dataset. inc.
+        'testMode':1,               # turn on testMode: will no longer save any param with model, last dataset. inc.
         'alg':'cart',                # id3, c4.5, cart,
-        'k':1                        # use k-floder
+        'k':0                        # use k-floder
     }
     s
 
