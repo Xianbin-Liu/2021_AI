@@ -16,8 +16,8 @@ def GetConfigure():
         'loaden' : 0,           # load the dict key for decision tree, so that it would not build the tree again 
         'loadDictFile' : 'param/decision_root_dict.json',
         'saveDictFile' : 'param/decision_root_dict.json',    
-        'validFile' : 'testFile/car_test_without_label_1.csv',   # if not specify this file, use splitted default dataset for valset
-        'trainFile' : 'testFile/car_train_with_label.csv',       # the same as above
+        'validFile' : '',   # if not specify this file, use splitted default dataset for valset
+        'trainFile' : '',       # the same as above
         'saveResultPath':'result/18308133_liuxianbin_decisionTree_prediction',
         'validation_rate': 0.15,     # the rate of dataset spliting for validation
         'reconstruct': 0,       # whether to reconstruct the train/val dataset with last time, only in train mode

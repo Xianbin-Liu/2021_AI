@@ -1,3 +1,4 @@
+from os import linesep
 import numpy as np
 import pandas as pd
 from typing import List, Union
@@ -19,12 +20,11 @@ def GetConfigure():
         'validFile' : '',   # if not specify this file, use splitted default dataset for valset
         'trainFile' : '',       # the same as above
         'saveResultPath':'result/18308133_liuxianbin_decisionTree_prediction',
-        'validation_rate': 0.15,     # the rate of dataset spliting for validation
+        'validation_rate': 0.10,     # the rate of dataset spliting for validation
         'reconstruct': 0,       # whether to reconstruct the train/val dataset with last time, only in train mode
-        'testMode':0,               # turn on testMode: will no longer save any param with model, last dataset. inc.
-        'alg':'cart'                # id3, c4.5, cart
+        'testMode':1,               # turn on testMode: will no longer save any param with model, last dataset. inc.
+        'alg':'id3'                # id3, c4.5, cart
     }
-    s
 
 def splitDataset(dataset:pd.DataFrame, Attr:Union[str, int], val:Union[int, List[int], None])-> pd.DataFrame:
     if val == None:
@@ -122,26 +122,26 @@ class decisionTress():
         # attr : (L:means label)
         # dec: decision
 
-        self.root = {'attr':'', 'dec':{}, 'pred':0}
+        self.root = {'attr':'', 'dec':{}, 'pred':(0,0), 'predac':0}
         self.dataset = dataset
 
 
     def bulid(self, alg:str='ID3') -> None:
         def choose(root : dict, dataset:pd.DataFrame):
+            N = len(dataset)
             # leaf
             labelDict = getlabel(dataset)
             thisLeafPred = max(labelDict.items(), key=operator.itemgetter(1))[0]
-            root['pred'] = thisLeafPred
+            root['pred'] = (thisLeafPred, labelDict[thisLeafPred]/len(dataset))
+            root['predac'] = root['pred'][1]
             if len(labelDict) == 1:         # when the label of dataset is the same
                 root['attr'] = 'L'
-                root['dec'] = thisLeafPred
-                root['pred'] = thisLeafPred
-                return
+                root['dec'] = {}
+                return root['predac']
             elif len(dataset.columns) == 1: # or when all attribution has been ran out
                 root['attr'] = 'L'
-                root['dec'] = thisLeafPred
-                root['pred'] = thisLeafPred
-                return
+                root['dec'] = {}
+                return root['predac']
 
             # choose feature}
             bestcol, bestg = '', -np.inf
@@ -161,11 +161,21 @@ class decisionTress():
             spData, val = splitDataset(dataset, bestcol, None)
             root['attr'] = bestcol
             # recursion
+            subAC = 0
             for i in range(len(spData)):
                 del spData[i][bestcol]
-                root['dec'][val[i]] = {'attr':'', 'dec':{}, 'pred':0}
-                choose(root['dec'][val[i]], spData[i])
-        
+                root['dec'][val[i]] = {'attr':'', 'dec':{}, 'pred':(0,0), 'predac':0}
+                sub = choose(root['dec'][val[i]], spData[i])
+                subAC += sub*len(spData[i])/N
+                # !cutting!
+            thisAC = root['predac']
+            if subAC < thisAC + 0.01:
+                #cut!
+                root['attr'] = 'L'
+                del root['dec']
+                root['dec'] = {}
+            return root['predac']
+
         choose(self.root, self.dataset)
 
     def predictSingle(self, data):
@@ -173,10 +183,10 @@ class decisionTress():
         while cur['attr'] != 'L':
             col = cur['attr']
             if data[col] not in cur['dec']:
-                return cur['pred']
+                return cur['pred'][0]
             else:
                 cur = cur['dec'][data[col]]
-        return cur['dec']   
+        return cur['pred'][0]
 
 
 if __name__ == "__main__":
