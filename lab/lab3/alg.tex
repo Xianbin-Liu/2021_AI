@@ -1,0 +1,178 @@
+\documentclass[11pt]{article}
+\usepackage{algorithm} %format of the algorithm 
+\usepackage{algorithmic} %format of the algorithm 
+\usepackage{multirow} %multirow for format of table 
+\usepackage{amsmath} 
+\usepackage{xcolor}
+\usepackage{CJKutf8}
+\usepackage{floatflt}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} 
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\title{实验二 决策树的实现}
+\author{18308133 刘显彬}
+\date{\today}
+\begin{document}
+\begin{CJK}{UTF8}{gbsn}
+\maketitle
+\section{伪代码}
+\begin{algorithm}
+\caption{PLApredict(X,W,b)}
+\label{alg1}
+\begin{algorithmic}
+\REQUIRE $X:$输入数据, $W:$	权重, $b:$常数偏置
+\ENSURE $Y$:预测值
+\STATE reurn Sign(W*X+b)
+
+\end{algorithmic}
+	
+\end{algorithm}
+
+\begin{algorithm}
+
+\caption{PLAtrain(X, l, W, b, iters, $\eta$)}\label{alg2}
+\begin{algorithmic}
+\REQUIRE $X$: 输入\ ;$l$: 标签;\ $iters$:迭代次数;\ $\eta$:学习率
+\ENSURE $W,b$ : 更新后的W,b
+\STATE $N \gets len(X)$
+\STATE $iter,i \gets 0$
+\WHILE{$iter \le iters$}
+	\STATE $y \gets label[i]$
+	\STATE $x \gets X[i]$
+	\STATE //找到误分类点
+	\IF{predict(x,W,b) != y}
+	\STATE $iter \gets iter+1$
+	\STATE //对W进行梯度下降更新
+	\STATE $dW \gets -y*x$
+	\STATE $W \gets W-\eta *dW$
+	\ENDIF
+	\STATE $i \gets (i+1)\%N$
+\ENDWHILE
+\STATE return W,b
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{algorithm}
+\caption{LRpredict(X, W, b)}\label{alg3}
+\begin{algorithmic}
+\REQUIRE $X:$输入数据, $W:$	权重, $b:$常数偏置
+\ENSURE $Y$:预测值
+\STATE $Y1\gets W*X+b$
+\STATE $Y\gets \frac{1}{1+e^{-Y1}}$
+\STATE return Y
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\begin{algorithm}
+
+\caption{LRtrain(X, l, W, b, iters, $\eta$)}\label{alg4}
+\begin{algorithmic}
+\REQUIRE $X$: 输入\ ;$l$: 标签;\ $iters$:迭代次数;\ $\eta$:学习率
+\ENSURE $W,b$ : 更新后的W,b
+\STATE $N \gets len(X)$
+\STATE $iter,i \gets 0$
+\FOR{$iter \gets 0$ to iters}
+	\STATE $p \gets$ predict(X,W,b)
+	\STATE //对W进行梯度下降更新
+	\STATE $dW\gets \sum_{i=0}^{N}X_i*(-l_i+p_i)$
+	\STATE $dW \gets \frac{dW}{N	}$
+	\STATE $W \gets W-\eta *dW$
+\ENDFOR
+\STATE return W,b
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+\begin{algorithm}
+\caption{Gini(d)}\label{alg8}
+\begin{algorithmic}
+\REQUIRE $d$: dataset
+\ENSURE $gini$
+
+\STATE // 分成不同的类
+\STATE $spData \gets $ split $d$ with different label
+\STATE $N \gets len(d)$
+\STATE 计算这些类的比重
+\STATE $freqs \gets \frac{len(dset)}{N}\ \forall dset \in spData$ \newline
+
+\STATE return $1-\sum_{freq\in freqs}{freq^2}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Gini(d, attr)}\label{alg5}
+\begin{algorithmic}
+\REQUIRE $d$: dataset, $attr$: split attr
+\ENSURE $gini$
+
+\STATE // 像前一个算法一样分裂数据集
+\STATE $spData \gets $ split $d$ with val $\in attr$
+\STATE $N \gets len(d)$
+\STATE $freqs \gets \frac{len(dset)}{N}\ \forall dset \in spData$ \newline
+\STATE $gini \gets 0$
+\FOR{$i \gets 0\ to\ len(freqs)$}{\label{get HD_A}
+	\STATE $gini$ += $freqs[i]*Gini(spData[i])$；
+		}
+\ENDFOR
+\STATE return $gini$
+\end{algorithmic}
+\end{algorithm}
+
+%% decision 
+\begin{algorithm}
+\caption{buildTree(root, d, alg)}\label{alg6}
+\begin{algorithmic}
+\REQUIRE $d$: dataset, $root$:决策树根, $alg$:计算信息熵的算法
+\IF{$d.attr == null$ or only one label in d.labels}
+\STATE 这是一片叶子
+\STATE root['attr']='leaf', root['val']=vote\_max(d.labels)
+\STATE return root
+\ELSE
+\STATE $best \gets -inf$;
+\STATE $bestattr \gets ''$;
+\STATE //根据给定的算法找出最优的属性
+\FORALL{$attr \in d.attr$}{
+	\STATE $best \gets alg(d, attr)$;
+	\STATE $bestattr \gets argmax(best,attr)$;
+
+}
+\ENDFOR \newline
+\STATE //然后对最优属性进行分裂，对子节点进行迭代
+\STATE $root['attr']\gets bestattr$
+\STATE $spData \gets$ d splitted by bestattr;
+\FOR{$sub \in spData$}{
+	\STATE $root['val']\gets buildTree(root['val'], sub, alg)$;
+}
+\ENDFOR 
+\ENDIF
+\ENSURE $root$
+
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\begin{algorithmic}
+\caption{predict(root, data)}
+\REQUIRE root:  决策树树根, data: 待预测的数据
+\ENSURE predVal: 预测值
+\STATE $cur \gets root$
+\STATE //当前不是叶子时，进行搜索
+\STATE $attr \gets cur['attr']$
+\WHILE{$attr$ != $'leaf'$}
+\STATE //进入data[attr]对应的一支分枝
+\STATE	$cur \gets cur['val'][data[attr]]$
+\STATE  $attr \gets cur['attr']$
+\ENDWHILE
+\STATE //返回叶子的预测label
+\STATE return cur['val']
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\end{CJK}
+\end{document}
