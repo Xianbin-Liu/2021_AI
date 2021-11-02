@@ -5,14 +5,19 @@ class DataLoader:
     def __init__(self, datas:Iterable) -> None:
         self.datas = datas
 
-    def KfolderData(self, K:int, shuffle=False):
+    def KfolderData(self, K:int, shuffle=False, test=False):
         # data should include labels
         if shuffle : np.random.shuffle(self.datas)
         numOfPart = int(len(self.datas)/K)
-        for i in range(K):
-            trainset = np.append(self.datas[numOfPart*(i+1):, :], self.datas[:numOfPart*i,:], axis=0)
-            valset = self.datas[numOfPart*i:numOfPart*(i+1),:]
-            yield trainset[:,:-1], trainset[:,-1].reshape(-1,1), valset[:,:-1], valset[:,-1].reshape(-1,1)
+        if not test:
+            for i in range(K):
+                trainset = np.append(self.datas[numOfPart*(i+1):, :], self.datas[:numOfPart*i,:], axis=0)
+                valset = self.datas[numOfPart*i:numOfPart*(i+1),:]
+                yield trainset[:,:-1], trainset[:,-1].reshape(-1,1), valset[:,:-1], valset[:,-1].reshape(-1,1)
+        else:
+            trainset, valset = self.datas[numOfPart:], self.datas[:numOfPart]
+            for i in range(1):
+                yield trainset[:,:-1], trainset[:,-1].reshape(-1,1), valset[:,:-1], valset[:,-1].reshape(-1,1)
     
     def Batch(self, batchsize=100, shuffle=True, throw=True):
         # with label

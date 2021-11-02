@@ -1,4 +1,3 @@
-from os import linesep
 import numpy as np
 from numpy.core.fromnumeric import trace
 from numpy.core.numeric import ones
@@ -9,6 +8,7 @@ import pandas as pd
 from typing import Iterable, List, Union
 import matplotlib.pyplot as plt
 import sys
+import re
 sys.path.append('../')
 sys.path.append('../code')
 from util import *
@@ -20,35 +20,64 @@ def configFile():
         "trainMode":1,
         "miniBatch": 100,
         "k":7,
-        "iter":100,
+        "iter":300,
         "lrate":0.1
     }
 
 # use to debug with one layer : y = Wx+b
 class NerualNet:
-    def __init__(self, featureDim, outputDim=1, HiddenDims=[], actiF=0, weight_scale=1e-2) -> None:
-        self.dims = featureDim   # merge with b
+    def __init__(self, paramsFile=None, featureDim=None, outputDim=1, HiddenDims=[], actiF=0, weight_scale=1e-2) -> None:
+        self.layers = self.dims = 0
         self.W = []
         self.b = []
-        HiddenDims.insert(0, featureDim)
-        HiddenDims.append(outputDim)
-        for i in range(len(HiddenDims)-1):
-            self.W.append(weight_scale*np.random.randn(HiddenDims[i], HiddenDims[i+1]))  #dont merge
-            self.b.append(weight_scale*np.random.randn(1, HiddenDims[i+1]))
-        #self.W = np.random.random((self.dims, 1)) # of shape (1, dims)
+        if paramsFile != None:
+           self.loadParam(paramsFile)
+           self.dims = len(self.W[0])
+        else:
+            self.dims = featureDim   # merge with b
+            HiddenDims.insert(0, featureDim)
+            HiddenDims.append(outputDim)
+            for i in range(len(HiddenDims)-1):
+                self.W.append(weight_scale*np.random.randn(HiddenDims[i], HiddenDims[i+1]))  #dont merge
+                self.b.append(weight_scale*np.random.randn(1, HiddenDims[i+1]))
+            #self.W = np.random.random((self.dims, 1)) # of shape (1, dims)
         self.layers = len(self.W)
         self.trainMode = True
     
+    @property
+    def param(self):
+        param = {}
+        for i in range(self.layers):
+            param["W"+str(i+1)] = self.W[i]
+            param["b"+str(i+1)] = self.b[i]
+        return param
+
     def eval(self):
         self.trainMode = False
 
     def trainning(self):
         self.trainMode = True
 
-    def loadParam(self, filePath):
+    def loadParam(self, file):
+        R = ".*\.npz"
+        rule = re.compile(R)
+        if rule.match(file) is None:
+            file += ".npz"
+        param = np.load(file)
+        self.layers = int(len(param.files)/2)
+        if self.W : del self.W
+        if self.b : del self.b
+        self.W = []
+        self.b = []
+        for i in range(self.layers):
+            self.W.append(param["W"+str(i+1)])
+            self.b.append(param["b"+str(i+1)])      
+
+    def saveParam(self, file):
+        np.savez(file, **self.param)
         
 
-    def Loss(self, X, Labels=None, epsilonmax=0.95, epsilonmin=0.05):
+    def Loss(self, X, Labels=None, epsilonmax=0.95, epsilonmin=0.05, lossfunction="RMSELoss"):
         # Y1 = self.W.dot(X)
         dW_all, db_all, X_fullnet, Y_Fullnet, Y_act = [],[],[],[],[]
         Y = None  # predict
@@ -66,11 +95,19 @@ class NerualNet:
         if not self.trainMode or Labels is None:
             return Y
 
-        loss = self.MLELoss(Y, Labels)
+        # perform Loss
+        if lossfunction == "MLELoss":
+            loss = self.MLELoss(Y, Labels)
 
-        # backward
-        dy = self.backwardSigmodMLELoss(Y, Labels)
-        dW, db, dy = self.backwardFullnet(self.W[-1], X_fullnet[-1], dy)
+            # first lay backard with Loss
+            dy = self.backwardSigmodMLELoss(Y, Labels)
+            dW, db, dy = self.backwardFullnet(self.W[-1], X_fullnet[-1], dy)
+        elif lossfunction == "RMSELoss":
+            loss = self.RMSELoss(Y, Labels)
+            dy = self.backwardRMSE(loss, Y, Labels)
+            dy = self.backwardSigmod(Y, dy)
+            dW, db, dy = self.backwardFullnet(self.W[-1], X_fullnet[-1], dy)
+
         dW_all.insert(0, dW)
         db_all.insert(0, db)
         for i in range(self.layers-2, -1, -1):
@@ -81,7 +118,7 @@ class NerualNet:
 
         return dW_all, db_all, loss
 
-    def train(self, X, labels=None, valSet=None, valabel=None, lrate=0.01, iters=10, batchSize=0, epsilonmax=0.95, epsilonmin=0.05):
+    def train(self, X, labels=None, valSet=None, valabel=None, lrate=0.01, iters=10, batchSize=0, epsilonmax=0.95, epsilonmin=0.05, lossfunction="RMSELoss"):
         # ensure X NOT append with label
         if batchSize == 0: batchSize = len(X)
         Loss = []
@@ -92,7 +129,7 @@ class NerualNet:
             if labels is None: labels =np.ones((len(X),1))
             for miniX, minY in DataLoader(np.append(X,labels, axis=1)).Batch(batchSize,shuffle=True):
                 cnt += 1
-                dW, db, loss = self.Loss(miniX, minY)
+                dW, db, loss = self.Loss(miniX, minY, lossfunction=lossfunction)
                 for i in range(self.layers):
                     self.W[i] -= lrate*dW[i]
                     self.b[i] -= lrate*db[i]
@@ -150,10 +187,13 @@ class NerualNet:
     def backwardMLELoss(self, Y, label):
         return -label*(1/Y) + (1-label)*(1/(1-Y))
     
-    def RMSELoss(self, X, Y):
-        return np.sqrt(np.sum(np.square(X)+np.square))
+    def RMSELoss(self, Yp, Y):
+        return np.sqrt(Y.T.dot(Y)+Yp.T.dot(Yp)-2*Y.T.dot(Yp))/len(Y)
 
-    def backwardRMSE(self):
+    def backwardRMSE(self, Loss, Yp, Y):
+        return (Yp-Y)/Loss
+    
+    def backwardSigmodRMSE(self):
         pass
 
     def predictSingle(self, data):
@@ -173,39 +213,29 @@ class NerualNet:
 def main2():
     config = configFile()
     lrate=config['lrate']
-    # trainset = pd.read_csv("check/train_sample.csv", header=None).values
-    # valset =  pd.read_csv("check/test.csv", header=None).values
     dataset = pd.read_csv("check/train.csv", header=None).values
     dataset[:,-1] = dataset[:,-1].astype('int')
-    # np.random.shuffle(dataset)
-    # trainset = dataset[:-1000,:]
-    # valset = dataset[-1000:,:]
-    # trlabel = trainset[:,-1].reshape(-1,1)
-    # trainset = trainset[:,:-1]
-    # valabel = valset[:,-1].reshape(-1,1)
-    # valset = valset[:,:-1]
-    # dims = len(trainset[0])
     loader = DataLoader(dataset)
-    for trainset, trlabel, valset, valabel in loader.KfolderData(7, shuffle=True):
+    for trainset, trlabel, valset, valabel in loader.KfolderData(7, shuffle=False, test=True):
         dims = len(trainset[0])
-        lrMod = NerualNet(dims, outputDim=1, HiddenDims=[])
-        Loss, ac_t, ac_v = lrMod.train(trainset, labels=trlabel, lrate=lrate, iters=config["iter"], batchSize=1000)
-        x1 = np.arange(0, len(Loss), 1)
-        plt.subplot(1,3,1)
-        plt.scatter(x1, Loss)
-        plt.title("Loss")
+        lrMod = NerualNet(featureDim=dims, outputDim=1, HiddenDims=[50, 20])
+        Loss, ac_t, ac_v = lrMod.train(trainset, labels=trlabel, lrate=lrate, iters=config["iter"], batchSize=1000, lossfunction="RMSELoss")
+        #lrMod.loadParam("test")
+        # x1 = np.arange(0, len(Loss), 1)
+        # plt.subplot(1,3,1)
+        # plt.scatter(x1, Loss)
+        # plt.title("Loss")
         
-        if ac_v != []:
-            plt.subplot(1,3,2)
-            plt.scatter(x1, ac_v)
-            plt.title("ac_v")
+        # if ac_v != []:
+        #     plt.subplot(1,3,2)
+        #     plt.scatter(x1, ac_v)
+        #     plt.title("ac_v")
 
-        plt.subplot(1,3,3)
-        plt.scatter(x1, ac_t)
-        plt.title("ac_t")
+        # plt.subplot(1,3,3)
+        # plt.scatter(x1, ac_t)
+        # plt.title("ac_t")
 
-        plt.show()
-
+        # plt.show()
         lrMod.eval()
         pred, ac = lrMod.predict(valset, valabel)
         result = np.append(valabel, pred, axis=1)
@@ -213,3 +243,11 @@ def main2():
 
 if __name__ == "__main__":
     main2()
+    # model = NerualNet(3, 1, [3])
+    # model.W[1] = np.zeros(shape=model.W[1].shape)
+    # print(model.param)
+    # model.saveParam("test")
+    # model2 = NerualNet(3, 1, [3])
+    # model2.loadParam("test")
+    # print(model2.param)
+    
