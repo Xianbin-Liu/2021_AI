@@ -30,3 +30,9 @@ class LrateStrategy:
     
     def warmup(self):
         pass
+
+    def Adam(self):
+        pass
+    
+    def RMSprop(self):
+        pass

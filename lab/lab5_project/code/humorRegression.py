@@ -23,10 +23,4 @@ def main():
     dataset[:,-1] = dataset[:,-1].astype('int')
     loader = DataLoader(dataset)
     for trainset, trlabel, valset, valabel in loader.KfolderData(7):
-        dims = len(trainset[0])
-        lrMod = NerualNet(dims)
-        lrMod.train(trainset, labels=trlabel, lrate=lrate, iters=config["iter"])
-        lrMod.eval()
-        pred, ac = lrMod.predict(valset, valabel)
-        result = np.append(valabel, pred, axis=1)
-        print("ac of lrate:%f is %f" %(lrate, ac))
+        pass
