@@ -1,0 +1,16 @@
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_002.csv
+paramFile : param/classification/002
+k : 10
+lrate : 0.5
+epochs : 400
+batchSize : 128
+shuffle : True
+Hidden : [64]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MLELoss

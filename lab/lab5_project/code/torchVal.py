@@ -4,6 +4,7 @@ import pandas as pd
 import torch
 from torch._C import LiteScriptModule, import_ir_module
 import torch.nn as nn
+from torch.nn.modules.loss import MSELoss
 import torch.optim as optim
 from torch.utils.data.dataloader import DataLoader
     
@@ -27,7 +28,7 @@ class HumanRegression(nn.Module):
         return output
     
 
-    def train(self, X, Y, epoch=10, lr=1e-2, loss_function=nn.BCELoss(), batch_size=100, shuffle=True):
+    def train(self, X, Y, epoch=100, lr=1e-2, loss_function=nn.BCELoss(), batch_size=100, shuffle=True):
         Xtorch = torch.FloatTensor(X)
         Ytorch = torch.FloatTensor(Y).reshape(-1,1)
         # X = torch.FloatTensor(X)
@@ -63,13 +64,13 @@ class HumanRegression(nn.Module):
 
 
 if __name__ == '__main__':
-    dataset = pd.read_csv("check/train.csv", header=None).values
+    dataset = pd.read_csv("data/classification/train_vector.csv", header=None).values
     dataset[:,-1] = dataset[:,-1].astype('int')
-    valset = dataset[-1000:, :]
+    valset = dataset[-1000:, 1:]
     valabel = valset[:,-1].reshape((-1,1))
     valset = torch.FloatTensor(dataset[-1000:,:-1])
-    model = HumanRegression(40, 10, 1)
-    model.train(dataset[:,:-1], dataset[:,-1])
+    model = HumanRegression(100, 40, 1)
+    model.train(dataset[:,1:-1], dataset[:,-1])
     yp = model.forward(valset)
     yp = np.array(yp > 0.5)
     ac = (yp == valabel).mean()
