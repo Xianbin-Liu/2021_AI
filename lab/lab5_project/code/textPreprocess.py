@@ -24,14 +24,14 @@ from util import *
 
 def configureFile()->dict[str,str]:
     return {
-        "processFile":"data/classification/test_classification.csv",
-        "vectorFile":"data/classification/test_vector002.csv",
-        "word2VecParam":"param/cls_word2vec002.model",
+        "processFile":"data/regression/test_regression.csv",
+        "vectorFile":"data/regression/test_vector002.csv",
+        "word2VecParam":"param/reg_word2vec002.model",
         "vector_size":100,
         "epochs":10,
         "load":True,
         "label":False,
-        "regress":False
+        "regress":True
     }
 
 
@@ -72,10 +72,12 @@ def processSentence(file, label=True, regression=True):
         nanid = pd.isna(dataset[:,-1])
         NADataset = dataset[nanid]      # 脏数据：标签没有给出的数据
         TrainDataset = dataset[~nanid]  # 正常数据
-        labels = TrainDataset[1:, -1].astype('float64').reshape((-1,1))
+        if label:
+            labels = TrainDataset[1:, -1].astype('float64').reshape((-1,1))
 
     else:
-        labels = dataset[1:, -2].astype('float64').reshape((-1,1))
+        if label:
+            labels = dataset[1:, -2].astype('float64').reshape((-1,1))
 
     stemmer = SnowballStemmer("english")  # 选择语言
     # get sentences

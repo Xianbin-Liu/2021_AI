@@ -1,12 +1,17 @@
+from typing import ForwardRef
 import numpy as np
-from numpy import TooHardError
+from numpy import TooHardError, not_equal
+import numpy
 import pandas as pd 
 import torch
 from torch._C import LiteScriptModule, import_ir_module
 import torch.nn as nn
+from torch.nn.modules import loss
 from torch.nn.modules.loss import MSELoss
 import torch.optim as optim
+from torch.utils import data
 from torch.utils.data.dataloader import DataLoader
+import copy
     
 
 class HumanRegression(nn.Module):
@@ -18,7 +23,7 @@ class HumanRegression(nn.Module):
 
         self.model = nn.Sequential(
             nn.Linear(self.input_size, self.hidden_size),
-            nn.ReLU(),
+            nn.Sigmoid(),
             nn.Linear(self.hidden_size, self.output_size),
             nn.Sigmoid()
         )
@@ -28,11 +33,9 @@ class HumanRegression(nn.Module):
         return output
     
 
-    def train(self, X, Y, epoch=100, lr=1e-2, loss_function=nn.BCELoss(), batch_size=100, shuffle=True):
+    def train(self, X, Y, epoch=300, lr=1e-2, loss_function=nn.BCELoss(), batch_size=100, shuffle=True):
         Xtorch = torch.FloatTensor(X)
-        Ytorch = torch.FloatTensor(Y).reshape(-1,1)
-        # X = torch.FloatTensor(X)
-        # Y = torch.FloatTensor(Y)
+        Ytorch = torch.FloatTensor(Y).reshape((-1,1))
         def _custom_collate_fn(batch):
             x, y = zip(*batch)
             x = torch.FloatTensor(x)
@@ -40,7 +43,8 @@ class HumanRegression(nn.Module):
             return x, y
         # Set the number of epoch, which determines the number of training iterations
         n_epoch = epoch
-        adam = optim.Adam(self.parameters(), lr=lr)
+        #adam = optim.Adagrad(self.parameters(), lr=lr)
+        adam = optim.SGD(self.parameters(), lr=lr)
         loader = DataLoader(list(zip(X,Y)), batch_size=batch_size, shuffle=shuffle, collate_fn=_custom_collate_fn)
         for epoch in range(n_epoch):
             for batch_x, batch_y in loader:
@@ -64,14 +68,30 @@ class HumanRegression(nn.Module):
 
 
 if __name__ == '__main__':
-    dataset = pd.read_csv("data/classification/train_vector.csv", header=None).values
-    dataset[:,-1] = dataset[:,-1].astype('int')
+    dataset = pd.read_csv("data/classification/train_vector002.csv", header=None).values
+    dataset[:,-1] = dataset[:,-1].astype('float')
     valset = dataset[-1000:, 1:]
-    valabel = valset[:,-1].reshape((-1,1))
-    valset = torch.FloatTensor(dataset[-1000:,:-1])
-    model = HumanRegression(100, 40, 1)
+
+    Xtorch = torch.FloatTensor(dataset[:,1:-1])
+    Ytorch = torch.FloatTensor(dataset[:,-1]).reshape(-1,1)
+    model = HumanRegression(100, 64, 1)
     model.train(dataset[:,1:-1], dataset[:,-1])
-    yp = model.forward(valset)
-    yp = np.array(yp > 0.5)
-    ac = (yp == valabel).mean()
-    print(ac)
+    
+    # paramfrom = dict(model.named_parameters())
+    # paramto = dict()
+    # paramto['W1'] = paramfrom['model.0.weight'].detach().numpy()
+    # paramto['b1'] = paramfrom['model.0.bias'].detach().numpy()
+    # paramto['W2'] = paramfrom['model.2.weight'].detach().numpy()
+    # paramto['b2'] = paramfrom['model.2.bias'].detach().numpy()
+    #np.savez("torchtest.npz", **paramto)
+    # Yp = model.forward(Xtorch)
+    # lossf = nn.BCELoss()
+    # loss = lossf(Yp, Ytorch)
+    # ac = (np.array((Yp > 0.5) == Ytorch)).mean()
+    # print(f"final traing loss: {loss}")
+    # print(f"final accuarracy: {ac}")
+    # Yp = Yp.detach().numpy()
+    # Yp = Yp.reshape((-1,1))
+    # df = np.append(dataset[:,1].reshape((-1,1)), Yp, axis=1)
+    # df = np.append(df, dataset[:,-1].reshape((-1,1)), axis=1)
+    # pd.DataFrame(df).to_csv("testtorch.csv", header=None)

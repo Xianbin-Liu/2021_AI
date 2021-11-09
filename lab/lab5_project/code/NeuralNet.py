@@ -12,6 +12,7 @@ from typing import Iterable, List, Union
 import matplotlib.pyplot as plt
 import sys
 import re
+
 sys.path.append('../')
 sys.path.append('../code')
 from util import *
@@ -24,7 +25,7 @@ def configFile():
         "trainMode":1,
         "miniBatch": 100,
         "k":7,
-        "epoch":100,
+        "epoch":250,
         "lrate":0.1
     }
     
@@ -50,8 +51,8 @@ class NerualNet:
             HiddenDims.insert(0, featureDim)
             HiddenDims.append(outputDim)
             for i in range(len(HiddenDims)-1):
-                self.W.append(weight_scale*np.random.randn(HiddenDims[i], HiddenDims[i+1]))  #dont merge
-                self.b.append(weight_scale*np.random.randn(1, HiddenDims[i+1]))
+                self.W.append(np.random.randn(HiddenDims[i], HiddenDims[i+1]) / np.sqrt(HiddenDims[i])/2) #dont merge
+                self.b.append(np.random.randn(1, HiddenDims[i+1]))
             #self.W = np.random.random((self.dims, 1)) # of shape (1, dims)
         self.layers = len(self.W)
         self.trainMode = True
@@ -96,13 +97,13 @@ class NerualNet:
         np.savez(file, **self.param)
         
 
-    def Loss(self, X, Labels=None, epsilonmax=0.95, epsilonmin=0.05, lossfunction="RMSELoss"):
+    def Loss(self, X, Labels=None, epsilonmax=0.95, epsilonmin=0.05, lossfunction="RMSELoss", lamda=0):
         '''
         @intro：        ！！！不需要外部调用！！！
         @X:             输入X
         @Labels：       真实值
         @eplision：  保证传入MLEloss函数的输入的上下限
-        @lossfunction： 指定损失函数，目前版本只支持：MLELoss(用于二分类)，RMSELoss（均方根误差：用于回归预测）
+        @lossfunction： 指定损失函数，目前版本只支持：MLELoss(用于二分类)，RMSELoss（均方根误差：用于回归预测）, MSELoss
         '''
         # Y1 = self.W.dot(X)
         dW_all, db_all, X_fullnet, Y_Fullnet, Y_act = [],[],[],[],[]
@@ -113,10 +114,11 @@ class NerualNet:
             Y,X = self.Fullnet(X,self.W[i],self.b[i])
             X_fullnet.append(X)
             Y_Fullnet.append(Y)
-            Y,X2 = self.sigmod(Y)
+            Y,X2 = self.sigmod(Y) # proto: Y,X = sigmod(X)
             Y_act.append(Y)    # output of each layer
             X = Y   #  Next layer input
 
+        # here: Y is the last activation result, now change it with parameter self.lastACT
         if self.lastACT == "ReLU":
             Y = Y_act[-1] = self.ReLU(Y_Fullnet[-1])
         elif self.lastACT == "linear":
@@ -127,7 +129,7 @@ class NerualNet:
 
         # perform Loss
         if lossfunction == "MLELoss":
-            Y = np.minimum(np.maximum(Y, epsilonmin), epsilonmax)
+            Y = np.minimum(np.maximum(Y, epsilonmin), epsilonmax)   # make Y in (0,1) instead :[0,1]
             lossf = self.MLELoss
             backSigLoss = self.backwardSigmodMLELoss
             if self.lastACT == "ReLU":
@@ -141,15 +143,26 @@ class NerualNet:
             backSigLoss = self.backwardSigmodRMSE
             if self.lastACT == "ReLU":
                 backSigLoss = self.backwardReLURMSE
-
             elif self.lastACT == "linear":
                 backSigLoss = self.backwardRMSE
+            
+        elif lossfunction == "MSELoss":
+            lossf = self.MSEloss
+            backSigLoss = self.backwardSimgodMSE
+            if self.lastACT == "ReLU":
+                backSigLoss = self.backwardReLUMSE
+            elif self.lastACT == "linear":
+                backSigLoss = self.backwardMSE
 
 
         else:
             raise ValueError("请确定lossFunction的名称")
+        
+        W_square = 0
+        for i in range(self.layers):
+            W_square += self.W[i].flatten().dot(self.W[i].flatten().T) + self.b[i].flatten().dot(self.b[i].flatten().T)
 
-        loss = lossf(Yp=Y, Y=Labels)
+        loss = lossf(Yp=Y, Y=Labels) + lamda*W_square
         if not self.trainMode:
             return Y, loss
 
@@ -167,7 +180,7 @@ class NerualNet:
 
         return {"dW":dW_all, "db":db_all, "loss":loss}
 
-    def train(self, X, labels=None, valSet=None, valabel=None, lrate=0.01, epochs=10, batchSize=0, lossfunction="RMSELoss"):
+    def train(self, X, labels=None, valSet=None, valabel=None, lrate=0.01, epochs=10, batchSize=0, lossfunction="RMSELoss", lamda=0, optim=None):
         '''
         @X：        请确保输入的X不带有标签
         @labels：   输入的标签
@@ -185,19 +198,22 @@ class NerualNet:
         Loss = []
         Loss_x = []
         Loss_v = []
+        dW_2 = []
         cnt = 0
         for epoch in range(epochs):
             if labels is None: labels =np.ones((len(X),1))
             for miniX, minY in DataLoader(np.append(X,labels, axis=1)).Batch(batchSize,shuffle=True):
                 cnt += 1
-                cache = self.Loss(miniX, minY, lossfunction=lossfunction)
+                cache = self.Loss(miniX, minY, lossfunction=lossfunction, lamda=lamda)
                 dW, db, loss = cache["dW"], cache["db"], cache["loss"]
+                if optim is not None:
+                    dW, db = optim(dW, db)
                 for i in range(self.layers):
-                    self.W[i] -= lrate*dW[i]
-                    self.b[i] -= lrate*db[i]
+                    self.W[i] -= lrate*(dW[i]+lamda*self.W[i])
+                    self.b[i] -= lrate*(db[i]+lamda*self.b[i])
                 if cnt % 10 == 0:
                     Loss.append(loss.flatten())
-                    
+                    dW_2.append((dW[0]*dW[0]).sum())
                     # ac = ((self.Loss(miniX)>0.5).astype('int').reshape(-1,1)==minY).mean()
                     # ac_t.append(ac)
                     # if valSet is not None:
@@ -253,6 +269,7 @@ class NerualNet:
         return (X > 0).dot(dy_upper)
 
     def backwardSigmod(self,X=0, Y=0, dy_upper=0):
+        # X not used
         # dy = -label*(1/Y) + (1-label)*(1/(1-Y))
         # so, backwardLogi return -(label*(1-Y) - (1-label)*Y) = -(label-Y)
         return Y*(1-Y)*(dy_upper)
@@ -265,14 +282,25 @@ class NerualNet:
     def backwardMLELoss(self, Yp, Y, Loss=None):
         return -Y*(1/Yp) + (1-Y)*(1/(1-Yp))
     
+    def MSEloss(self, Yp, Y):
+        return (Y.T.dot(Y)+Yp.T.dot(Yp)-2*Y.T.dot(Yp))/len(Y)
+    
+    def backwardMSE(self, Yp, Y, Loss):
+        return 2*(Yp-Y)
+
     def RMSELoss(self, Yp, Y):
-        return np.sqrt(Y.T.dot(Y)+Yp.T.dot(Yp)-2*Y.T.dot(Yp))/len(Y)
+        return np.sqrt((Y.T.dot(Y)+Yp.T.dot(Yp)-2*Y.T.dot(Yp))/len(Y))
 
     def backwardRMSE(self, Yp, Y, Loss):
         return (Yp-Y)/Loss
     
     def backwardSigmodRMSE(self, Yp, Y, Loss):
         dy = self.backwardRMSE(Yp=Yp, Y=Y,Loss=Loss)
+        dy = self.backwardSigmod(Y=Yp, dy_upper=dy)
+        return dy
+
+    def backwardSimgodMSE(self, Yp, Y, Loss):
+        dy = self.backwardMSE(Yp, Y, Loss)
         dy = self.backwardSigmod(Y=Yp, dy_upper=dy)
         return dy
 
@@ -307,21 +335,10 @@ def main2():
     for trainset, trlabel, valset, valabel in loader.KfolderData(7, shuffle=False, test=True):
         dims = len(trainset[0])
         lrMod = NerualNet(featureDim=dims, outputDim=1, HiddenDims=[40])
-        Loss, ac_t, ac_v = lrMod.train(trainset, labels=trlabel, lrate=lrate, epochs=config["epoch"], batchSize=1000, lossfunction="MLELoss")
-        #lrMod.loadParam("test")
-        # x1 = np.arange(0, len(Loss), 1)
-        # plt.subplot(1,3,1)
-        # plt.scatter(x1, Loss)
-        # plt.title("Loss")
-        
-        # if ac_v != []:
-        #     plt.subplot(1,3,2)
-        #     plt.scatter(x1, ac_v)
-        #     plt.title("ac_v")
-
-        # plt.subplot(1,3,3)
-        # plt.scatter(x1, ac_t)
-        # plt.title("ac_t")
+        strategy = LrateStrategy(lrMod.W, lrMod.b)
+        adagrad = strategy.Adagrad
+        Loss, ac_t, ac_v = lrMod.train(trainset, labels=trlabel, lrate=lrate, epochs=config["epoch"], batchSize=1000, lossfunction="MLELoss", lamda=0.0, optim=adagrad)
+        plotTraining(Loss, ac_t, ac_v)
 
         # plt.show()
         lrMod.eval()

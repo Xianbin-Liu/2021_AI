@@ -1,0 +1,98 @@
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_001.csv
+paramFile : param/regression/001
+k : 10
+lrate : 0.01
+epochs : 100
+batchSize : 256
+shuffle : True
+load : False
+log : True
+test : True
+lastACT : linear
+lossfunction : RMSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_001.csv
+paramFile : param/regression/001
+k : 10
+lrate : 0.01
+epochs : 100
+batchSize : 256
+shuffle : True
+load : False
+log : True
+test : True
+lastACT : linear
+lossfunction : RMSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_001.csv
+paramFile : param/regression/001
+k : 10
+lrate : 0.01
+epochs : 100
+batchSize : 256
+shuffle : True
+load : False
+log : True
+test : True
+lastACT : linear
+lossfunction : RMSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_001.csv
+paramFile : param/regression/001
+k : 10
+lrate : 0.01
+epochs : 88
+batchSize : 256
+shuffle : True
+load : False
+log : True
+test : True
+lastACT : linear
+lossfunction : RMSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_001.csv
+paramFile : param/regression/001
+k : 10
+lrate : 0.01
+epochs : 88
+batchSize : 256
+HiddenDim : [100, 64, 16, 1]
+shuffle : True
+load : False
+log : True
+test : True
+lastACT : linear
+lossfunction : RMSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_001.csv
+paramFile : param/regression/001
+k : 10
+lrate : 0.01
+epochs : 88
+batchSize : 100
+HiddenDim : [100, 64, 1]
+shuffle : True
+load : False
+log : True
+test : True
+lastACT : linear
+lossfunction : RMSELoss
