@@ -5,6 +5,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn as nn
 from torch.nn.modules import adaptive
+from torch.nn.modules.container import ModuleList
 import torch.optim as optim
 sys.path.append('../')
 sys.path.append('../code')
@@ -13,7 +14,6 @@ from NeuralNet import *
 
 # sigmod/backward check
 def gcheck1(model:NerualNet, X):
-    h = 1e-5
     Y1, X = model.sigmod(X)
     dy1 = model.backwardSigmod(X, Y1, dy_upper=1)
     
@@ -405,7 +405,31 @@ def gcheck8(X, Y):
         print((abs(model.W[1].T-tgW2.detach().numpy())).max())
 
 
+
+# relu
+def gcheck10(X, Y):
+    model = NerualNet(featureDim=len(X[0]), outputDim=len(Y[0]))
+    model.groupReLU = (1, 0)
+    data = model.ReLU(X)
+    cache = model.MSEloss(data, Y)
+    dy1 = model.backwardReLUMSE(cache)
+    
+    Xtorch = torch.FloatTensor(X)
+    Ytorch = torch.FloatTensor(Y)
+    Xtorch = Variable(Xtorch, requires_grad=True)
+    Ytorch = Variable(Ytorch, requires_grad=True)
+    y = torch.relu(Xtorch)
+    losf = nn.BCELoss()
+    loss = losf(y, Ytorch)
+    loss.backward(gradient=torch.ones(X.shape))
+    print(abs((dy1-Xtorch.grad.numpy())<1e-7).all())
+
 if __name__ == '__main__':
-    X = np.random.random((100, 30))
-    Y = np.random.randint(0,2, 100).reshape((-1,1))
-    gcheck7(X, Y)
+    X = np.random.randint(0, 4, (3,4))
+    Y = np.random.randint(0,2, 3).reshape((-1,1))
+
+    model = NerualNet(featureDim=10, outputDim=1)
+    d = {'gamma': np.ones((1,4)), 'beta':np.ones((1,4)), 'miu':[], 'var':[]}
+    res =  model.BatchNorm(X, d)
+    print(res)
+    #gcheck10(X, Y)

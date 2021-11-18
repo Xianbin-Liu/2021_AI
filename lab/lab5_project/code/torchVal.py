@@ -33,7 +33,7 @@ class HumanRegression(nn.Module):
         return output
     
 
-    def train(self, X, Y, epoch=300, lr=1e-2, loss_function=nn.BCELoss(), batch_size=100, shuffle=True):
+    def train(self, X, Y, epoch=500, lr=1e-2, loss_function=nn.BCELoss(), batch_size=100, shuffle=True):
         Xtorch = torch.FloatTensor(X)
         Ytorch = torch.FloatTensor(Y).reshape((-1,1))
         def _custom_collate_fn(batch):
@@ -77,13 +77,13 @@ if __name__ == '__main__':
     model = HumanRegression(100, 64, 1)
     model.train(dataset[:,1:-1], dataset[:,-1])
     
-    # paramfrom = dict(model.named_parameters())
-    # paramto = dict()
-    # paramto['W1'] = paramfrom['model.0.weight'].detach().numpy()
-    # paramto['b1'] = paramfrom['model.0.bias'].detach().numpy()
-    # paramto['W2'] = paramfrom['model.2.weight'].detach().numpy()
-    # paramto['b2'] = paramfrom['model.2.bias'].detach().numpy()
-    #np.savez("torchtest.npz", **paramto)
+    paramfrom = dict(model.named_parameters())
+    paramto = dict()
+    paramto['W1'] = paramfrom['model.0.weight'].detach().numpy()
+    paramto['b1'] = paramfrom['model.0.bias'].detach().numpy()
+    paramto['W2'] = paramfrom['model.2.weight'].detach().numpy()
+    paramto['b2'] = paramfrom['model.2.bias'].detach().numpy()
+    np.savez("torchtest.npz", **paramto)
     # Yp = model.forward(Xtorch)
     # lossf = nn.BCELoss()
     # loss = lossf(Yp, Ytorch)

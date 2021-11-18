@@ -1,0 +1,150 @@
+\documentclass{ctexart}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{authblk}
+\usepackage{graphicx}
+\usepackage{stfloats}
+\usepackage{amsfonts}
+\usepackage{floats}
+\usepackage{CJKutf8}
+\usepackage{blindtext}
+\usepackage{graphicx}
+\usepackage{float}
+%\usepackage{fontspec}
+\usepackage{listings}
+\usepackage{enumerate}
+\usepackage{fontspec}
+\usepackage{caption, setspace}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{
+    frame=tb,
+    language=Python,
+    aboveskip=3mm,
+    belowskip=3mm,
+    showstringspaces=false,
+    columns=flexible,
+    basicstyle={\small\ttfamily},
+    numbers=none,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue},
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{mauve},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=3
+}
+
+\title{幽默文本检测}
+\author{18308133 刘显彬}
+\author{19335301 庄鹏标}
+
+\date{\today}
+\begin{document}
+    \maketitle
+    \tableofcontents
+    \section{概述}
+    \section{实验原理}
+        \subsection{Feedback Network 和Back Propagation}
+            \subsubsection{前向神经网络}
+                我们知道，将输入值的集合唯一映射为输出集合的关系，叫做函数：$ X \overset{f}{\rightarrow} Y $，其中X可以是一段文字，Y可以是这段文字对应的幽默程度估计，这种估计关系就是一种函数。
+                但这种关系非常难用准确的数学函数式子表示，所以我们希望：
+                \begin{itemize}
+                    \item $f(x)$本身是一个黑箱子，它可以自行调整自己的内部结构
+                    \item 它可以处理不限于线性的函数映射，对于非线性的映射它也可以有一定的处理能力
+                \end{itemize}
+                对于上面的问题，我们可以分别用下面的方法解决：
+                \begin{itemize}
+                    \item 自行调整：我们可以借鉴逻辑回归的经验，借助梯度下降这一方法来实现
+                    \item 线性预测：我们可以简单地用$Y=Wx+b$来很表达线性的函数结构，其中的$W,b$就是需要用梯度下降让模型自行学习的参数
+                    \item 非线性：引入非线性的函数，与上一步中的$Y$串联输出，自此，我们就完成了从$X\rightarrow Y$的简单非线性映射
+                    \item 双层叠加：单次的线性预测+非线性输出并不足以表现非线性（因为最终结果和中间的线性预测结果仍然是唯一相关的），因此，我们采用一种简单的方式：将该结果，重复上面两个过程，这样就可以将第一次的非线性信息利用起来，让我们的黑箱子打破非线性的结构，正式拥有非线性的预测能力
+                \end{itemize}
+                形式化来讲：我们的黑箱子中的线性预测单元称为：神经元；神经元输出通过的非线性函数称为激活函数（这一过程称为激活）；我们把通过一次线性预测+一次激活称为一层中间层/隐藏层。
+                
+                但不难想象的是，随着从$X\rightarrow Y$的实际映射复杂度上升，有限的双层结构不能充分表达实际映射，此时我们有两种做法以增加复杂度：（1）将层内神经元的规模变大：但神经元的运算是线性的，这样并不足以弥补非线性部分。（2）增加层数：模仿双层叠加，将更多层串联在一起，这样便能不断增加黑箱子的非线性能力。
+                
+                至此，我们得以初步窥视神经网络的基础结构：以神经元预测和激活过程为重复单元：给出图示如下：
+                \begin{figure}[H]
+                    \includegraphics[width=\textwidth, height=2.4in]{pic/nn.png}
+                \end{figure}
+
+                \subsubsection{后向传播过程}
+                    现在我们来关注如何对神经网络的进行梯度推导，我们用到的核心公式为链式法则：
+                    \begin{equation}
+                        \frac{\partial Z}{\partial X} = \frac{\partial Y}{\partial X} \frac{\partial Z}{\partial Y}  
+                    \end{equation}
+                    \begin{figure}[H]
+                        \includegraphics[width=2.3in]{pic/bp.png}
+                    \end{figure}
+                    从局部看一个单独的神经元的话，也就是说，我们计算一个神经元处的梯度，也就是要算，损失函数$L$对该神经元参数$W$的偏微分，假设该神经元的输入为$X$, 输出为$Y$，由链式法则：
+                    \begin{equation}
+                        \frac{\partial L}{\partial W} = \frac{\partial L}{\partial Y} \frac{\partial Y}{\partial W}
+                    \end{equation}
+                    如此一来，我们便将一个全局的梯度计算，分解成了两部分：神经元的局部梯度：$\frac{\partial Y}{\partial W}$，以及$L$对该神经元输出$Y$的全局梯度：$\frac{\partial L}{\partial Y}$，
+                    但幸运的是，由$Y=Wx+b$可知，$\frac{\partial Y}{\partial W} = X$，所以问题变成了$Y$的全局梯度求解，我们重复这个过程，不难看出：每一层($i$层)的梯度计算，都依赖于该层的输出($Y_i$)的梯度计算。
+                    因此，我们可以从最后一层的梯度开始，然后不断往前面的层计算梯度，由于计算梯度的方向和神经网络的输出计算方向相反，因此，我们把这个过程叫做：\textbf{后向传播过程}；
+                    同时我们发现，全局梯度计算可以分解成局部梯度的乘积，所以我们可以先对单独的激活层、线性层、损失层等，先计算它们的局部梯度作为基础。
+                \subsection{梯度推导}
+                    \subsubsection{神经元}
+                        \begin{eqnarray}
+                            Y = Wx + b
+                            \frac{\partial{Y}}{\partial{X}} = W \\
+                            \frac{\partial{Y}}{\partial{W}} = X
+                        \end{eqnarray}
+                        
+                    \subsubsection{激活层}
+                        \begin{eqnarray}
+                            Y = \frac{1}{e^{-X}} \\ 
+                            \frac{\partial{Y}}{\partial{X}} = \frac{e^{-X}}{Y^2} =  Y(Y-1)
+                        \end{eqnarray}
+                    
+                    \subsubsection{损失函数}
+                    损失函数我们用了三种：二元交叉熵（BCE），均方误差（MSE），均方根误差（RMSE）：
+                    
+                    其中BCE我们在逻辑回归中已经完成推导，在此不再赘述。
+                    MSE推导如下，假设样本数为$N$，真实标签为$Label$，预测值为$Y$：
+                    \begin{eqnarray}
+                        L = \frac{1}{N}\sum_{i}^{N} (Label_i-Y_i)^2 \\ 
+                        \frac{\partial L}{\partial Y_i} = \frac{2*(Y_i-Label)}{N}
+                    \end{eqnarray}
+                    RMSE的推导如下：
+                    \centering
+                    \begin{eqnarray}
+                        L_{MSE} & = \frac{1}{N}\sum_{i}^{N} (Label_i-Y_i)^2 \\ 
+                        L & = \sqrt{L_MSEL} \\ 
+                        \frac{\partial L}{\partial Y_i} & = \frac{1}{2}\cdot \frac{1}{L} \cdot \frac{\partial MSE_L}{\partial Y_i}\\
+                        & = \frac{2\cdot (Y_i-Label)}{N\cdot L}
+                    \end{eqnarray}
+
+    \section{伪代码/实验过程}
+        \subsection{神经网络}
+            由于每一部分的偏微分过程的伪代码不比数学公式或者实际的代码更清晰，所以这一部分将不给出推导公式的伪代码。
+            我们直接给出计算过程的流程图（如图所示）：
+
+            其中，注意到图中的$Nx$，表示这一层结构将会串联重复$N$次，上一层的结果将作为下一层的输入；对称地，在反向传播过程也会重复$N$次，每一层的梯度$dy$将作为前一层的上游梯度；
+            还有图中横跨Forward和BackWard过程的箭头：这表示计算梯度的时候，我们需要用到前向传播中的数据，正如上一节梯度推导所示。
+            \begin{figure}
+                \includegraphics{pic/nn_flows2.png}
+            \end{figure}
+    \section{关键代码解析}
+            \subsection{神经网络}
+                \begin{lstlisting}
+                    
+                \end{lstlisting}
+    \section{实验结果与分析}
+        \subsection{分类}
+        \subsection{回归预测}
+    \section{总结}
+    \section{参考资料}
+
+    \section{分工}
+    \subsection{刘显彬}
+    \subsection{庄鹏标}
+
+\end{document}

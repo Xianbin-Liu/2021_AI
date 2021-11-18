@@ -14,3 +14,370 @@ log : True
 test : True
 lastACT : sigmod
 lossfunction : MLELoss
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_004.csv
+paramFile : param/classification/004
+k : 10
+lrate : 0.01
+epochs : 10
+batchSize : 128
+shuffle : True
+load : False
+HiddenDim : [100, 64, 1]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MLELoss
+optimize : adam
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_005.csv
+paramFile : param/classification/005
+k : 10
+lrate : 0.01
+epochs : 50
+batchSize : 128
+shuffle : True
+load : False
+HiddenDim : [100, 64, 1]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optimize : adam
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_005.csv
+paramFile : torchtest
+k : 10
+lrate : 0.01
+epochs : 50
+batchSize : 128
+shuffle : True
+load : True
+HiddenDim : [64]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MLELoss
+optimize : adam
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_005.csv
+paramFile : torchtest
+k : 200
+lrate : 0.01
+epochs : 50
+batchSize : 128
+shuffle : True
+load : False
+HiddenDim : [100, 64, 32, 1]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MLELoss
+optim : adam
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_006.csv
+paramFile : param/classification/006
+k : 200
+lrate : 0.01
+epochs : 50
+batchSize : 128
+shuffle : True
+load : False
+HiddenDim : [100, 64, 32, 1]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MLELoss
+optim : adam
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_007.csv
+paramFile : param/classification/007
+k : 200
+lrate : 0.01
+epochs : 50
+batchSize : 64
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MLELoss
+optim : adam
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_008.csv
+paramFile : param/classification/008
+k : 200
+lrate : 0.01
+epochs : 20
+batchSize : 64
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'sigmod', 'sigmod']
+accuaracy in trainset : 0.846356783919598
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_009.csv
+paramFile : param/classification/009
+k : 200
+lrate : 0.01
+epochs : 20
+batchSize : 64
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'relu', 'sigmod']
+accuaracy in trainset : 0.8506281407035176
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_010.csv
+paramFile : param/classification/010
+k : 20
+lrate : 0.01
+epochs : 20
+batchSize : 64
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'relu', 'sigmod']
+accuaracy in trainset : 0.8493421052631579
+accuaracy in valset : 0.855
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_011.csv
+paramFile : param/classification/011
+k : 20
+lrate : 0.01
+epochs : 30
+batchSize : 100
+shuffle : True
+load : False
+HiddenDim : [100, 30]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'sigmod', 'sigmod']
+bn : False
+accuaracy in trainset : 0.8619736842105263
+accuaracy in valset : 0.855
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_012.csv
+paramFile : param/classification/012
+k : 20
+lrate : 0.01
+epochs : 30
+batchSize : 100
+shuffle : True
+load : False
+HiddenDim : [100, 30]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'sigmod', 'sigmod']
+bn : False
+accuaracy in trainset : 0.8630263157894736
+accuaracy in valset : 0.855
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_013.csv
+paramFile : param/classification/013
+k : 20
+lrate : 0.01
+epochs : 30
+batchSize : 100
+shuffle : True
+load : False
+HiddenDim : [100, 30]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'sigmod', 'sigmod']
+bn : False
+accuaracy in trainset : 0.8544736842105263
+accuaracy in valset : 0.86
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_014.csv
+paramFile : param/classification/014
+k : 20
+lrate : 0.01
+epochs : 30
+batchSize : 64
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'sigmod', 'sigmod']
+bn : True
+accuaracy in trainset : 0.8551315789473685
+accuaracy in valset : 0.8575
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_015.csv
+paramFile : param/classification/015
+k : 20
+lrate : 0.001
+epochs : 50
+batchSize : 100
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'sigmod', 'sigmod']
+bn : True
+accuaracy in trainset : 0.8442105263157895
+accuaracy in valset : 0.8525
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_016.csv
+paramFile : param/classification/016
+k : 20
+lrate : 0.001
+epochs : 50
+batchSize : 100
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'relu', 'sigmod']
+bn : True
+accuaracy in trainset : 0.8871052631578947
+accuaracy in valset : 0.84
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_017.csv
+paramFile : param/classification/017
+k : 20
+lrate : 0.01
+epochs : 20
+batchSize : 100
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'relu', 'sigmod']
+bn : True
+accuaracy in trainset : 0.8489473684210527
+accuaracy in valset : 0.8575
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_018.csv
+paramFile : param/classification/018
+k : 20
+lrate : 0.006
+epochs : 20
+batchSize : 100
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+activation : ['sigmod', 'relu', 'sigmod']
+bn : True
+accuaracy in trainset : 0.854078947368421
+accuaracy in valset : 0.865
+
+ 本次运行的配置文件如下：
+trainFile : data/classification/train_vector002.csv
+testFile : data/classification/test_vector002.csv
+predTestFile : result/cls_019.csv
+paramFile : param/classification/019
+k : 20
+lrate : 0.005
+epochs : 30
+batchSize : 128
+shuffle : True
+load : False
+HiddenDim : [64, 32]
+activation : ['sigmod', 'relu', 'sigmod']
+log : True
+test : True
+lastACT : sigmod
+lossfunction : MSELoss
+optim : adam
+bn : True
+accuaracy in trainset : 0.8727631578947368
+accuaracy in valset : 0.8325

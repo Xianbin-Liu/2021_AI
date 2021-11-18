@@ -96,3 +96,83 @@ log : True
 test : True
 lastACT : linear
 lossfunction : RMSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_003.csv
+paramFile : param/regression/003
+k : 20
+lrate : 0.01
+epochs : 30
+batchSize : 128
+HiddenDim : [100, 64, 30, 1]
+activation : ['sigmod', 'sigmod', 'linear']
+shuffle : True
+load : False
+log : True
+relu : (1, 0.1)
+bn : False
+test : True
+lastACT : linear
+lossfunction : MSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_004.csv
+paramFile : param/regression/004
+k : 20
+lrate : 0.01
+epochs : 30
+batchSize : 128
+HiddenDim : [100, 64, 30, 1]
+activation : ['sigmod', 'sigmod', 'linear']
+shuffle : True
+load : False
+log : True
+relu : (1, 0.1)
+bn : False
+test : True
+lastACT : linear
+lossfunction : MSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_005.csv
+paramFile : param/regression/005
+k : 20
+lrate : 0.01
+epochs : 30
+batchSize : 30
+HiddenDim : [100, 64, 30, 1]
+activation : ['sigmod', 'sigmod', 'linear']
+shuffle : True
+load : False
+log : True
+relu : (1, 0.1)
+bn : False
+test : True
+lastACT : linear
+lossfunction : MSELoss
+
+ 这次的配置如下：
+trainFile : data/regression/train_vector002.csv
+testFile : data/regression/test_vector002.csv
+predTestFile : result/reg_006.csv
+paramFile : param/regression/006
+k : 20
+lrate : 0.01
+epochs : 30
+batchSize : 30
+HiddenDim : [100, 64, 30, 1]
+activation : ['sigmod', 'relu', 'linear']
+shuffle : True
+load : False
+log : True
+relu : (1, 0.1)
+bn : False
+test : True
+lastACT : linear
+lossfunction : MSELoss

@@ -27,8 +27,8 @@ class DataLoader:
         numOfPart = int(len(self.datas)/K)
         if not test:
             for i in range(K):
-                trainset = np.append(self.datas[numOfPart*(i+1):, :], self.datas[:numOfPart*i,:], axis=0)
-                valset = self.datas[numOfPart*i:numOfPart*(i+1),:]
+                trainset = np.append(self.datas[numOfPart*(i+1):, :], self.datas[:numOfPart*i,:], axis=0).astype('float64')
+                valset = self.datas[numOfPart*i:numOfPart*(i+1),:].astype('float64')
                 yield trainset[:,:-1], trainset[:,-1].reshape(-1,1), valset[:,:-1], valset[:,-1].reshape(-1,1)
         else:
             trainset, valset = self.datas[numOfPart:], self.datas[:numOfPart]
@@ -104,7 +104,7 @@ class LrateStrategy:
                 # rmsprop
                 self.gW2[i] = beta2*self.gW2[i] + (1-beta2)*np.square(dW[i])
                 self.gb2[i] = beta2*self.gb2[i] + (1-beta2)*np.square(db[i])
-                
+                # update
                 gW[i] = self.gW[i] / (1-pow(beta1, self.t))
                 gW[i] = gW[i] / ( np.sqrt(self.gW2[i]/(1-beta1**self.t)) +epsilon)
                 

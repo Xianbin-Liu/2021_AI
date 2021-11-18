@@ -1,3 +1,4 @@
+from nltk.corpus.util import TRY_ZIPFILE_FIRST
 import numpy as np
 import pandas as pd
 from typing import Iterable, List, Union
@@ -17,16 +18,19 @@ def configFile()->dict[str, str]:
     return{
         "trainFile":"data/regression/train_vector002.csv",
         "testFile":"data/regression/test_vector002.csv",
-        "predTestFile":"result/reg_001.csv",
-        "paramFile":"param/regression/001",
-        "k":100,
+        "predTestFile":"result/reg_008.csv",
+        "paramFile":"param/regression/008",
+        "k":20,
         "lrate":0.01,
-        "epochs":88,
-        "batchSize":100,
+        "epochs":30,
+        "batchSize":256,
         "HiddenDim":[64],
-        "shuffle":True,
+        'activation' : ['sigmod','linear'],
+        "shuffle":False,
         "load":False,
-        "log":False
+        "log":False,
+        "relu":(1,0),
+        "bn":False
     }
 
 def main():
@@ -51,23 +55,26 @@ def main():
         # 建立NeuralNet模型
         if not config['load']:
             model = NerualNet(featureDim=dims, outputDim=1, HiddenDims=config['HiddenDim'], lastACT=config["lastACT"])
+            model.saveParam(config["paramFile"])
         else:
             model = NerualNet(paramsFile=config["paramFile"])
+        
+        model.addActivation(config["activation"])
+        model.groupReLU = config['relu']
         # 训练
         lrs = LrateStrategy(model.W, model.b)
         adam = lrs.Adam()
-        Loss, ac_t, ac_v = model.train(traindata, trlabel, valdata, valabel, lrate=lrate, epochs=epochs, batchSize=batchSize, lossfunction=config["lossfunction"], optim=adam)
+        Loss, ac_t, ac_v = model.train(traindata, trlabel, valdata, valabel, lrate=lrate, epochs=epochs, batchSize=batchSize, lossfunction=config["lossfunction"], optim=adam, bn=config["bn"])
         plotTraining(Loss, ac_t, ac_v)
 
         # 预测  
-        pred,loss = model.predict(valdata, valabel)
+        pred,loss = model.predict(valdata, valabel, bn=config['bn'])
         print(f"the loss of config: lrate:{lrate}, epochs:{epochs}, batchSize:{batchSize} is {loss}")
         
 
     if config['log']:
         print("\n\n 现在开始测试：测试集...... \n\n")
-        model.saveParam(config["paramFile"])
-        pred = model.predict(testSet[:,1:])
+        pred = model.predict(testSet[:,1:], bn=config['bn'])
         df = DataFrame(columns=["id","humor_rating"], index=None)
         df['id'] = testSet[:,0].astype('int')
         df['humor_rating'] = pred
